@@ -1,0 +1,58 @@
+wd <- dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(wd)
+
+library(Biostrings)
+library(tidyverse)
+
+### Paste your sequence here
+seq <- "GCTTTGCTCTCTGGACAGAGTGACCCCACTGTAATGTGACTTTTGTTAAGTATCTGTAGGTCCTAGGGGCCACAATTCTGTGTGTTCTGGCATGGTGGGTACCATTGCCTAGGAAGGGAAAAAGATTTGAGGGGTTCCAGGGATCACCAAGCATTTCAGCAAGGGGCCACCCACCCTGGTGACCATTTTGTCCTTTGCCTCTGTTGAAGCTGAGCTCAAGTTTGAGGCAGCAATCCC"
+
+dna.sense <- DNAString(seq)
+dna.antisense <- reverseComplement(dna.sense)
+### Start with a fasta file
+
+
+
+parameters <- list(
+  dna = NULL,
+  pam = "NGG",
+  sgrna_bp = 20,
+  filename = "sgrna_list.fasta"
+)
+
+
+
+
+get_sgRNA_fasta <- function(dna, 
+                            pam, 
+                            sgrna_bp, 
+                            filename){
+  #get bottom strand
+  bottom.strand <- reverseComplement(dna)
+  
+  #find positions of PAM for top and bottom
+  position.pam.top <- start(matchPattern(dna, pattern = pam, fixed = FALSE))
+  position.pam.bot <- start(matchPattern(bottom.strand, pattern = pam, fixed = FALSE))
+  #initialize IR
+  ir.top <- IRanges(start = position.pam.top - sgrna_bp,
+                    end = position.pam.top - 1,
+                    position_pam = position.pam.top
+                    )
+  
+  ir.bot <- IRanges(start = position.pam.bot - sgrna_bp,
+                    end = position.pam.bot -1,
+                    position_pam = position.pam.bot 
+                    )
+  
+ ir.top <- ir.top[start(ir.top) > 0]
+ ir.bot <- ir.bot[start(ir.bot) > 0]
+ 
+ sgrna.stringset.top <- DNAStringSet(dna, start(ir.top), end(ir.top))
+ sgrna.stringset.bot <- DNAStringSet(bottom.strand, start(ir.bot), end(ir.bot))
+ 
+ names(sgrna.stringset.top) <- paste0("sgrna_topstrand_", 1:length(sgrna.stringset.top))
+ names(sgrna.stringset.bot) <- paste0("sgrna_botstrand_", 1:length(sgrna.stringset.bot))
+ 
+ 
+ writeXStringSet(c(sgrna.stringset.top, sgrna.stringset.bot), filepath = filename)
+}

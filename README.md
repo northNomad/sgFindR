@@ -1,7 +1,7 @@
 # sgFindR
-Script to find sgRNAs given sequence.
+Script to order sgRNAs from IDT given target sequence.
 
-Useful when designing single guides to target non-coding regions of the genome.
+Useful when designing CRISPR experiments targeting non-coding regions of the genome.
 
 
 ## Usage
